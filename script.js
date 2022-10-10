@@ -27,7 +27,7 @@ const startGame = () => {
         cell.classList.remove("circle");
         cell.classList.remove("X");
         cell.removeEventListener("click", handleClick);
-        cell.addEventListener("click", handleClick, {once: true});
+        cell.addEventListener("click", handleClick, { once: true });
     }
 
     setBoardHoverClass();
@@ -35,12 +35,12 @@ const startGame = () => {
 };
 
 const endGame = (IsDraw) => {
-    if(IsDraw) {
+    if (IsDraw) {
         winningMessagetexteElement.innerText = "Old!"
     } else {
-        winningMessagetexteElement.innerText = isCircleturn 
-        ? "Circulo Venceu" 
-        : "X Venceu!";
+        winningMessagetexteElement.innerText = isCircleturn
+            ? "◯ Venceu!"
+            : "X Venceu!";
     }
 
     winningMessage.classList.add("show-winning-message");
@@ -67,10 +67,10 @@ const placeMark = (cell, classToAdd) => {
 const setBoardHoverClass = () => {
     board.classList.remove("circle");
     board.classList.remove("X");
-    
+
     if (isCircleturn) {
         board.classList.add("circle")
-    }else{
+    } else {
         board.classList.add("X")
     }
 }
@@ -90,7 +90,7 @@ const handleClick = (e) => {
 
     //Verificar por virtoria
     const isWin = checkForWin(classToAdd);
-    
+
     //Verificar por empate
     const IsDraw = checkForDraw();
 
@@ -99,8 +99,8 @@ const handleClick = (e) => {
     } else if (IsDraw) {
         endGame(true);
     } else {
-    //Mudar simbolo
-    swapTurns();
+        //Mudar simbolo
+        swapTurns();
     }
 };
 
