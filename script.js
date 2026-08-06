@@ -300,7 +300,7 @@ function endGame(isDraw, winner = null, winningCombination = null) {
     gameState.isGameActive = false;
     gameState.winningCombination = winningCombination;
 
-        if (isDraw) {
+    if (isDraw) {
         statusElement.textContent = "Empate!";
         statusElement.classList.add("draw");
         statusElement.classList.remove("win");
