@@ -12,6 +12,8 @@ const scoreOElement = document.querySelector("[data-score-o]");
 const scoreDrawElement = document.querySelector("[data-score-draw]");
 const clearScoreButton = document.querySelector("[data-clear-score]");
 const modeButtons = document.querySelectorAll("[data-mode-btn]");
+const soundToggleButton = document.querySelector("[data-sound-toggle]");
+const soundIcon = document.querySelector("[data-sound-icon]");
 
 const PLAYERS = {
     X: "X",
@@ -46,6 +48,11 @@ const scoreState = {
     X: 0,
     O: 0,
     draw: 0
+};
+
+const soundState = {
+    enabled: true,
+    audioContext: null
 };
 
 let focusedCellIndex = 0;
@@ -158,6 +165,7 @@ function handleCellClick(e) {
     gameState.board[index] = gameState.currentPlayer;
     renderBoard();
     cell.focus();
+    playSound("move");
 
     const result = checkWinner();
 
@@ -255,6 +263,7 @@ function makeAIMove() {
         if (index !== null && gameState.isGameActive) {
             gameState.board[index] = PLAYERS.O;
             renderBoard();
+            playSound("move");
             cellElements[index].scrollIntoView({ block: "nearest" });
 
             const result = checkWinner();
@@ -291,7 +300,7 @@ function endGame(isDraw, winner = null, winningCombination = null) {
     gameState.isGameActive = false;
     gameState.winningCombination = winningCombination;
 
-    if (isDraw) {
+        if (isDraw) {
         statusElement.textContent = "Empate!";
         statusElement.classList.add("draw");
         statusElement.classList.remove("win");
@@ -299,6 +308,7 @@ function endGame(isDraw, winner = null, winningCombination = null) {
         winningMessageText.classList.add("draw");
         winningMessageText.classList.remove("win");
         playerIndicator.textContent = "";
+        playSound("draw");
     } else {
         statusElement.innerHTML = `${winner} venceu!`;
         statusElement.classList.add("win");
@@ -307,6 +317,7 @@ function endGame(isDraw, winner = null, winningCombination = null) {
         winningMessageText.classList.add("win");
         winningMessageText.classList.remove("draw");
         playerIndicator.textContent = "";
+        playSound("win");
     }
 
     board.classList.remove("X", "O");
@@ -390,10 +401,64 @@ function clearScore() {
     renderScore();
 }
 
+function getAudioContext() {
+    if (!soundState.audioContext) {
+        soundState.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return soundState.audioContext;
+}
+
+function playSound(type) {
+    if (!soundState.enabled) return;
+
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    switch (type) {
+        case "move":
+            oscillator.type = "sine";
+            oscillator.frequency.value = 400;
+            gainNode.gain.value = 0.08;
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            oscillator.stop(ctx.currentTime + 0.3);
+            break;
+        case "win":
+            oscillator.type = "sine";
+            oscillator.frequency.value = 660;
+            gainNode.gain.value = 0.15;
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+            oscillator.stop(ctx.currentTime + 0.5);
+            break;
+        case "draw":
+            oscillator.type = "sine";
+            oscillator.frequency.value = 300;
+            gainNode.gain.value = 0.1;
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+            oscillator.stop(ctx.currentTime + 0.4);
+            break;
+    }
+}
+
+function toggleSound() {
+    soundState.enabled = !soundState.enabled;
+    soundIcon.textContent = soundState.enabled ? "🔊" : "🔇";
+    soundToggleButton.classList.toggle("muted", !soundState.enabled);
+}
+
 restartButton.addEventListener("click", resetGame);
 winningMessageButton.addEventListener("click", resetGame);
 board.addEventListener("keydown", handleBoardKeyDown);
 clearScoreButton.addEventListener("click", clearScore);
 modeButtons.forEach((btn) => btn.addEventListener("click", handleModeChange));
+soundToggleButton.addEventListener("click", toggleSound);
 
 init();

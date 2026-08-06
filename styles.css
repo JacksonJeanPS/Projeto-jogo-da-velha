@@ -22,12 +22,44 @@ body {
     max-width: 450px;
 }
 
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 450px;
+}
+
 .game-title {
     font-size: 2.5rem;
     color: #ffffff;
     text-align: center;
     font-weight: 300;
     letter-spacing: 2px;
+}
+
+.sound-toggle {
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #ffffff;
+    font-size: 1.5rem;
+}
+
+.sound-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.sound-toggle.muted {
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .score-board {
