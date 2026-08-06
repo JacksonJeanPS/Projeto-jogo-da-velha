@@ -10,6 +10,24 @@
         <main class="game-container">
             <h1 class="game-title">Jogo da Velha</h1>
 
+            <div class="score-board" data-score-board>
+                <div class="score-item">
+                    <span class="score-label">X</span>
+                    <span class="score-value" data-score-x>0</span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">Empates</span>
+                    <span class="score-value" data-score-draw>0</span>
+                </div>
+                <div class="score-item">
+                    <span class="score-label">O</span>
+                    <span class="score-value" data-score-o>0</span>
+                </div>
+            </div>
+            <button class="clear-score-btn" data-clear-score type="button" aria-label="Limpar placar">
+                Limpar placar
+            </button>
+
             <div class="status" data-status aria-live="polite" aria-atomic="true">
                 <span class="status-text">Vez de:</span>
                 <span class="player-indicator" data-player-indicator>X</span>

@@ -6,6 +6,11 @@ const restartButton = document.querySelector("[data-restart-button]");
 const winningMessage = document.querySelector("[data-winning-message]");
 const winningMessageText = document.querySelector("[data-winning-message-text]");
 const winningMessageButton = document.querySelector("[data-winning-message-button]");
+const scoreBoard = document.querySelector("[data-score-board]");
+const scoreXElement = document.querySelector("[data-score-x]");
+const scoreOElement = document.querySelector("[data-score-o]");
+const scoreDrawElement = document.querySelector("[data-score-draw]");
+const clearScoreButton = document.querySelector("[data-clear-score]");
 
 const PLAYERS = {
     X: "X",
@@ -28,6 +33,12 @@ const gameState = {
     currentPlayer: PLAYERS.X,
     isGameActive: true,
     winningCombination: null
+};
+
+const scoreState = {
+    X: 0,
+    O: 0,
+    draw: 0
 };
 
 let focusedCellIndex = 0;
@@ -54,6 +65,8 @@ function init() {
     winningMessage.classList.remove("show");
     updateAriaLabels();
     updateStatus();
+    loadScore();
+    renderScore();
     focusCell(focusedCellIndex);
 }
 
@@ -203,6 +216,8 @@ function endGame(isDraw, winner = null, winningCombination = null) {
     winningMessage.classList.add("show");
     winningMessage.setAttribute("aria-hidden", "false");
     board.setAttribute("aria-hidden", "true");
+
+    updateScore(isDraw ? null : winner);
 }
 
 function updateStatus() {
@@ -229,8 +244,58 @@ function resetGame() {
     init();
 }
 
+function loadScore() {
+    const savedScore = localStorage.getItem("jogoDaVelhaScore");
+    if (savedScore) {
+        try {
+            const parsed = JSON.parse(savedScore);
+            scoreState.X = parsed.X || 0;
+            scoreState.O = parsed.O || 0;
+            scoreState.draw = parsed.draw || 0;
+        } catch (e) {
+            scoreState.X = 0;
+            scoreState.O = 0;
+            scoreState.draw = 0;
+        }
+    }
+}
+
+function saveScore() {
+    localStorage.setItem(
+        "jogoDaVelhaScore",
+        JSON.stringify(scoreState)
+    );
+}
+
+function updateScore(winner) {
+    if (winner === PLAYERS.X) {
+        scoreState.X++;
+    } else if (winner === PLAYERS.O) {
+        scoreState.O++;
+    } else {
+        scoreState.draw++;
+    }
+    saveScore();
+    renderScore();
+}
+
+function renderScore() {
+    if (scoreXElement) scoreXElement.textContent = scoreState.X;
+    if (scoreOElement) scoreOElement.textContent = scoreState.O;
+    if (scoreDrawElement) scoreDrawElement.textContent = scoreState.draw;
+}
+
+function clearScore() {
+    scoreState.X = 0;
+    scoreState.O = 0;
+    scoreState.draw = 0;
+    saveScore();
+    renderScore();
+}
+
 restartButton.addEventListener("click", resetGame);
 winningMessageButton.addEventListener("click", resetGame);
 board.addEventListener("keydown", handleBoardKeyDown);
+clearScoreButton.addEventListener("click", clearScore);
 
 init();

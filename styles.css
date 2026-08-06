@@ -30,6 +30,50 @@ body {
     letter-spacing: 2px;
 }
 
+.score-board {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    max-width: 360px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.75rem;
+}
+
+.score-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.score-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.score-value {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.clear-score-btn {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-score-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
 .status {
     font-size: 1.25rem;
     color: #ffffff;
@@ -202,6 +246,19 @@ body {
 @media (max-width: 480px) {
     .game-title {
         font-size: 1.8rem;
+    }
+
+    .score-board {
+        padding: 0.5rem;
+        max-width: 100%;
+    }
+
+    .score-value {
+        font-size: 1.4rem;
+    }
+
+    .score-label {
+        font-size: 0.8rem;
     }
 
     .status {
