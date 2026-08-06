@@ -30,22 +30,44 @@ const gameState = {
     winningCombination: null
 };
 
+let focusedCellIndex = 0;
+
 function init() {
     gameState.board = Array(9).fill(null);
     gameState.currentPlayer = PLAYERS.X;
     gameState.isGameActive = true;
     gameState.winningCombination = null;
+    focusedCellIndex = 0;
 
     cellElements.forEach((cell) => {
         cell.classList.remove(PLAYERS.X, PLAYERS.O, "winner");
         cell.textContent = "";
         cell.removeEventListener("click", handleCellClick);
         cell.addEventListener("click", handleCellClick);
+        cell.setAttribute("tabindex", "-1");
     });
+
+    board.setAttribute("aria-hidden", "false");
+    winningMessage.setAttribute("aria-hidden", "true");
 
     setBoardHoverClass();
     winningMessage.classList.remove("show");
+    updateAriaLabels();
     updateStatus();
+    focusCell(focusedCellIndex);
+}
+
+function updateAriaLabels() {
+    cellElements.forEach((cell, index) => {
+        const row = Math.floor(index / 3) + 1;
+        const col = (index % 3) + 1;
+        const mark = gameState.board[index];
+        if (mark) {
+            cell.setAttribute("aria-label", `Posição ${row}, ${col} - Marcada com ${mark === PLAYERS.X ? "X" : "O"}`);
+        } else {
+            cell.setAttribute("aria-label", `Posição ${row}, ${col} - Vazia`);
+        }
+    });
 }
 
 function renderBoard() {
@@ -57,6 +79,51 @@ function renderBoard() {
             cell.classList.add(mark);
         }
     });
+    updateAriaLabels();
+}
+
+function focusCell(index) {
+    focusedCellIndex = index;
+    cellElements[index].focus();
+}
+
+function handleBoardKeyDown(e) {
+    if (!gameState.isGameActive) {
+        return;
+    }
+
+    const key = e.key;
+    const row = Math.floor(focusedCellIndex / 3);
+    const col = focusedCellIndex % 3;
+
+    e.preventDefault();
+
+    switch (key) {
+        case "ArrowLeft":
+            if (col > 0) {
+                focusCell(focusedCellIndex - 1);
+            }
+            break;
+        case "ArrowRight":
+            if (col < 2) {
+                focusCell(focusedCellIndex + 1);
+            }
+            break;
+        case "ArrowUp":
+            if (row > 0) {
+                focusCell(focusedCellIndex - 3);
+            }
+            break;
+        case "ArrowDown":
+            if (row < 2) {
+                focusCell(focusedCellIndex + 3);
+            }
+            break;
+        case "Enter":
+        case " ":
+            cellElements[focusedCellIndex].click();
+            break;
+    }
 }
 
 function handleCellClick(e) {
@@ -69,6 +136,7 @@ function handleCellClick(e) {
 
     gameState.board[index] = gameState.currentPlayer;
     renderBoard();
+    cell.focus();
 
     const result = checkWinner();
 
@@ -133,6 +201,8 @@ function endGame(isDraw, winner = null, winningCombination = null) {
 
     board.classList.remove("X", "O");
     winningMessage.classList.add("show");
+    winningMessage.setAttribute("aria-hidden", "false");
+    board.setAttribute("aria-hidden", "true");
 }
 
 function updateStatus() {
@@ -161,5 +231,6 @@ function resetGame() {
 
 restartButton.addEventListener("click", resetGame);
 winningMessageButton.addEventListener("click", resetGame);
+board.addEventListener("keydown", handleBoardKeyDown);
 
 init();
