@@ -1,14 +1,18 @@
 const cellElements = document.querySelectorAll("[data-cell]");
 const board = document.querySelector("[data-board]");
-const winningMessagetexteElement = document.querySelector(
-    "[data-winning-message-text]"
-);
-const winningMessage = document.querySelector("[data-winning-message]");
+const statusElement = document.querySelector("[data-status]");
+const playerIndicator = document.querySelector("[data-player-indicator]");
 const restartButton = document.querySelector("[data-restart-button]");
+const winningMessage = document.querySelector("[data-winning-message]");
+const winningMessageText = document.querySelector("[data-winning-message-text]");
+const winningMessageButton = document.querySelector("[data-winning-message-button]");
 
-let isCircleturn;
+const PLAYERS = {
+    X: "X",
+    O: "O"
+};
 
-const winningCombinations = [
+const WINNING_COMBINATIONS = [
     [0, 1, 2],
     [3, 4, 5],
     [6, 7, 8],
@@ -16,93 +20,146 @@ const winningCombinations = [
     [1, 4, 7],
     [2, 5, 8],
     [0, 4, 8],
-    [2, 4, 6],
-]
+    [2, 4, 6]
+];
 
-const startGame = () => {
-    isCircleturn = false
+const gameState = {
+    board: Array(9).fill(null),
+    currentPlayer: PLAYERS.X,
+    isGameActive: true,
+    winningCombination: null
+};
 
-    for (const cell of cellElements) {
-        cell.classList.remove("circle");
-        cell.classList.remove("X");
-        cell.removeEventListener("click", handleClick);
-        cell.addEventListener("click", handleClick, { once: true });
-    }
+function init() {
+    gameState.board = Array(9).fill(null);
+    gameState.currentPlayer = PLAYERS.X;
+    gameState.isGameActive = true;
+    gameState.winningCombination = null;
+
+    cellElements.forEach((cell) => {
+        cell.classList.remove(PLAYERS.X, PLAYERS.O, "winner");
+        cell.textContent = "";
+        cell.removeEventListener("click", handleCellClick);
+        cell.addEventListener("click", handleCellClick);
+    });
 
     setBoardHoverClass();
-    winningMessage.classList.remove("show-winning-message");
-};
-
-const endGame = (IsDraw) => {
-    if (IsDraw) {
-        winningMessagetexteElement.innerText = "Old!"
-    } else {
-        winningMessagetexteElement.innerText = isCircleturn
-            ? "◯ Venceu!!"
-            : "X Venceu!!";
-    }
-
-    winningMessage.classList.add("show-winning-message");
+    winningMessage.classList.remove("show");
+    updateStatus();
 }
 
-const checkForWin = (currentPlayer) => {
-    return winningCombinations.some((combination) => {
-        return combination.every((index) => {
-            return cellElements[index].classList.contains(currentPlayer);
-        });
+function renderBoard() {
+    gameState.board.forEach((mark, index) => {
+        const cell = cellElements[index];
+        cell.textContent = mark || "";
+        cell.classList.remove(PLAYERS.X, PLAYERS.O);
+        if (mark) {
+            cell.classList.add(mark);
+        }
     });
-};
-
-const checkForDraw = () => {
-    return [...cellElements].every(cell => {
-        return cell.classList.contains("X") || cell.classList.contains("circle");
-    });
-};
-
-const placeMark = (cell, classToAdd) => {
-    cell.classList.add(classToAdd);
-};
-
-const setBoardHoverClass = () => {
-    board.classList.remove("circle");
-    board.classList.remove("X");
-
-    if (isCircleturn) {
-        board.classList.add("circle")
-    } else {
-        board.classList.add("X")
-    }
 }
 
-const swapTurns = () => {
-    isCircleturn = !isCircleturn
-
-    setBoardHoverClass();
-};
-
-const handleClick = (e) => {
-    //Colocar a marca (x ou Circulo)
+function handleCellClick(e) {
     const cell = e.target;
-    const classToAdd = isCircleturn ? "circle" : "X";
+    const index = parseInt(cell.dataset.index);
 
-    placeMark(cell, classToAdd);
+    if (!gameState.isGameActive || gameState.board[index]) {
+        return;
+    }
 
-    //Verificar por virtoria
-    const isWin = checkForWin(classToAdd);
+    gameState.board[index] = gameState.currentPlayer;
+    renderBoard();
 
-    //Verificar por empate
-    const IsDraw = checkForDraw();
+    const result = checkWinner();
 
-    if (isWin) {
-        endGame(false);
-    } else if (IsDraw) {
+    if (result.winner) {
+        endGame(false, result.winner, result.winningCombination);
+    } else if (checkDraw()) {
         endGame(true);
     } else {
-        //Mudar simbolo
         swapTurns();
     }
-};
+}
 
-startGame();
+function checkWinner() {
+    for (const combination of WINNING_COMBINATIONS) {
+        const [a, b, c] = combination;
+        if (
+            gameState.board[a] &&
+            gameState.board[a] === gameState.board[b] &&
+            gameState.board[a] === gameState.board[c]
+        ) {
+            highlightWinningCells(combination);
+            return {
+                winner: gameState.board[a],
+                winningCombination: combination
+            };
+        }
+    }
+    return { winner: null, winningCombination: null };
+}
 
-restartButton.addEventListener("click", startGame);
+function checkDraw() {
+    return gameState.board.every((cell) => cell !== null);
+}
+
+function highlightWinningCells(combination) {
+    combination.forEach((index) => {
+        cellElements[index].classList.add("winner");
+    });
+}
+
+function endGame(isDraw, winner = null, winningCombination = null) {
+    gameState.isGameActive = false;
+    gameState.winningCombination = winningCombination;
+
+    if (isDraw) {
+        statusElement.textContent = "Empate!";
+        statusElement.classList.add("draw");
+        statusElement.classList.remove("win");
+        winningMessageText.textContent = "Deu velha!";
+        winningMessageText.classList.add("draw");
+        winningMessageText.classList.remove("win");
+        playerIndicator.textContent = "";
+    } else {
+        statusElement.innerHTML = `${winner} venceu!`;
+        statusElement.classList.add("win");
+        statusElement.classList.remove("draw");
+        winningMessageText.textContent = `${winner} venceu!`;
+        winningMessageText.classList.add("win");
+        winningMessageText.classList.remove("draw");
+        playerIndicator.textContent = "";
+    }
+
+    board.classList.remove("X", "O");
+    winningMessage.classList.add("show");
+}
+
+function updateStatus() {
+    statusElement.classList.remove("win", "draw");
+    playerIndicator.textContent = gameState.currentPlayer;
+    playerIndicator.className = "player-indicator " + gameState.currentPlayer;
+}
+
+function swapTurns() {
+    gameState.currentPlayer =
+        gameState.currentPlayer === PLAYERS.X ? PLAYERS.O : PLAYERS.X;
+    setBoardHoverClass();
+    updateStatus();
+}
+
+function setBoardHoverClass() {
+    board.classList.remove(PLAYERS.X, PLAYERS.O);
+    board.classList.add(
+        gameState.currentPlayer === PLAYERS.O ? PLAYERS.O : PLAYERS.X
+    );
+}
+
+function resetGame() {
+    init();
+}
+
+restartButton.addEventListener("click", resetGame);
+winningMessageButton.addEventListener("click", resetGame);
+
+init();
